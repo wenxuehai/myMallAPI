@@ -31,9 +31,19 @@ productsApp.get('/latest', function (req, res) {
 })
 //关键字搜索接口
 productsApp.get('/keyword', function (req, res) {
-  console.log(req.query.itemName);
   pool.query(`select mainPic,name,sellPrice,saleProps from allGoods where keyword like '%${req.query.itemName}%'`, function (err, data) {
-    console.log(data);
+    res.send({
+      resultCode: 0,
+      resultMsg: "success",
+      pageNum: 1,
+      pages: 1,
+      list: data
+    }).end()
+  })
+})
+//商品列表展示接口
+productsApp.get('/catalog', function (req, res) {
+  pool.query(`select * from allGoods where itemId like '%${req.query.catalogId}%'`, function (err, data) {
     res.send({
       resultCode: 0,
       resultMsg: "success",
