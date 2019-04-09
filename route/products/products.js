@@ -1,6 +1,7 @@
 const express = require('express');
 const productsApp = express.Router();
-const mysql = require('mysql')
+const mysql = require('mysql');
+const categoryRoute = require('./category/category')
 
 var pool = mysql.createPool({
   host: "localhost",
@@ -8,6 +9,9 @@ var pool = mysql.createPool({
   password: "123456",
   database: "mymall_db"
 })
+
+//分类的接口
+productsApp.use('/category', categoryRoute)
 
 //精选好物、相关推荐接口
 productsApp.get('/', function (req, res) {
@@ -43,7 +47,7 @@ productsApp.get('/keyword', function (req, res) {
 })
 //商品列表展示接口
 productsApp.get('/catalog', function (req, res) {
-  pool.query(`select * from allGoods where itemId like '%${req.query.catalogId}%'`, function (err, data) {
+  pool.query(`select * from allGoods where catalogId like '%${req.query.catalogId}%'`, function (err, data) {
     res.send({
       resultCode: 0,
       resultMsg: "success",
@@ -53,4 +57,20 @@ productsApp.get('/catalog', function (req, res) {
     }).end()
   })
 })
+//商品详情接口 暂未完成
+productsApp.get('/goodDetails/:itemId', function (req, res) {
+  console.log(req.query);
+  console.log(req.params);
+  pool.query(``, function (err, data) {
+    console.log(1212);
+    res.send({
+      resultCode: 0,
+      resultMsg: "success",
+      pageNum: 1,
+      pages: 1,
+      list: data
+    }).end()
+  })
+})
+
 module.exports = productsApp;

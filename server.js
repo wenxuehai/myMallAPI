@@ -1,5 +1,5 @@
 const express = require('express')
-const productsRoute = require('./route/products/index')
+const productsRoute = require('./route/products/products')
 
 const app = express();
 app.listen(8888);
