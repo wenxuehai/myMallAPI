@@ -1,6 +1,5 @@
 const express = require('express');
 const categoryApp = express.Router();
-const mysql = require('mysql');
 const queryProm = require('../../../util/queryProm')
 
 //分类栏数据接口

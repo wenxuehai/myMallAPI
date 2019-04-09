@@ -2,6 +2,7 @@ const express = require('express');
 const productsApp = express.Router();
 const mysql = require('mysql');
 const categoryRoute = require('./category/category')
+const queryProm = require('../../util/queryProm')
 
 var pool = mysql.createPool({
   host: "localhost",
@@ -25,7 +26,7 @@ productsApp.get('/', function (req, res) {
 })
 //新品推荐接口
 productsApp.get('/latest', function (req, res) {
-  pool.query("select * from newPing", function (err, data) {
+  pool.query("select * from pullgoods", function (err, data) {
     res.send({
       resultCode: 0,
       resultMsg: "success",
@@ -57,20 +58,41 @@ productsApp.get('/catalog', function (req, res) {
     }).end()
   })
 })
-//商品详情接口 暂未完成
-productsApp.get('/goodDetails/:itemId', function (req, res) {
-  console.log(req.query);
-  console.log(req.params);
-  pool.query(``, function (err, data) {
-    console.log(1212);
-    res.send({
-      resultCode: 0,
-      resultMsg: "success",
-      pageNum: 1,
-      pages: 1,
-      list: data
-    }).end()
-  })
+//商品详情接口
+productsApp.get('/goodDetails/:itemId', async (req, res) => {
+  let shopId = req.query.shopId,
+    itemId = req.params.itemId,
+    outputData = {}
+
+  let parentArr = await queryProm(`select itemSkuDtos,itemEo,shopEo from goodsdetail where shopId=${shopId} and itemId=${itemId}`)
+  //这里是父级对象的数据
+  outputData = parentArr[0];
+
+  //这里是查询出来的父级对象的itemEo的数据
+  let itemEoData = await queryProm(`select id,name from itemEo where id=${outputData.itemEo}`);
+  outputData.itemEo = itemEoData[0];
+  //这里是查询出来的父级对象的shopEo的数据
+  let shopEoData = await queryProm(`select deliveryType,deliveryTimeDesc,refundDesc,logo,name from shopEo where ID=${outputData.shopEo}`);
+  outputData.shopEo = shopEoData[0];
+  //这里是父级对象的itemSkuDtos的数据
+  let itemSkuData = await queryProm(`select sellPrice,id,itemPropEos,mediaEos from itemSkuDtos where id=${outputData.itemSkuDtos}`);
+  for (const obj of itemSkuData) {
+    let str = obj.itemPropEos;
+    obj.itemPropEos = [{
+      propValue: str
+    }]
+    let mediaEosArr = await queryProm(`select fileUrl from mediaEos where shopId=${obj.mediaEos}`);
+    obj.mediaEos = mediaEosArr
+  }
+  outputData.itemSkuDtos = itemSkuData
+
+  res.send({
+    resultCode: 0,
+    resultMsg: "success",
+    pageNum: 1,
+    pages: 1,
+    data: outputData
+  }).end();
 })
 
 module.exports = productsApp;
