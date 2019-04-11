@@ -32,11 +32,11 @@ function setToken(obj,time){
 }
 
 //解析token
-function getToken(token){
+function analyToken(token){
   return new Promise((resolve, reject) => {
     jwt.verify(token, secretOrPrivateKey, (err, decode) => {
       if(err){
-        reject(err)
+        resolve(0)
       }else(
         resolve(decode)
       )
@@ -44,4 +44,5 @@ function getToken(token){
   })
 }
 
-module.exports = { rstr2b64, setToken, getToken };
+
+module.exports = { rstr2b64, setToken, analyToken };
