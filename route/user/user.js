@@ -4,6 +4,7 @@ const queryProm = require('../../util/queryProm')
 const bodyParser = require('body-parser');
 const Util = require('../../util/util')
 const ordersRoute = require('./orders/orders')
+const addressRoute = require('./address/address')
 
 usersApp.use(bodyParser.urlencoded({ extended: false }))
 usersApp.use(bodyParser.json())
@@ -18,7 +19,7 @@ usersApp.use(async function (req, res, next) {
       resultMsg: "success"
     }).end();
   } else {
-    let urlArr = ['/userInfo']
+    let urlArr = ['/userInfo','/address']
     if (urlArr.indexOf(req.url) != -1) { //请求地址存在于上面的数组中，则需要验证token值
       decode = await Util.analyToken(req.get("auth"))
       if (!decode) {  //如果token过期
@@ -33,8 +34,8 @@ usersApp.use(async function (req, res, next) {
   }
 })
 
-// 用户订单接口在orders路由完成
 usersApp.use('/orders', ordersRoute)
+usersApp.use('/address', addressRoute)
 
 //登录接口
 usersApp.post('/login', async (req, res) => {
@@ -45,7 +46,6 @@ usersApp.post('/login', async (req, res) => {
     userAccessVo: null,
     accessToken: ''
   }
-
   if (dataArr.length == 0) {
     outputData = {
       code: '-1',// -1 表示登录失败，其他的表示成功
@@ -65,7 +65,6 @@ usersApp.post('/login', async (req, res) => {
       accessToken: token
     }
   }
-
   res.send({
     resultCode: 0,
     resultMsg: "success",
@@ -82,28 +81,11 @@ usersApp.post('/logout', async (req, res) => {
   }).end();
 })
 
-//获取购物车数据接口
-// usersApp.get('/orders/carts/items',async (req,res)=>{
-//   console.log(req.get("auth"));
-//   var decode = null
-//   try{
-//     decode = await Util.analyToken(req.get("auth"))
-//     console.log(decode);
-//   }catch(err){
-//     console.log('已过期或者无效的token:',err.name);
-//   }
-//   res.send({
-//     resultCode: 0,
-//     resultMsg: "success",
-//     data: {ok: true}
-//   }).end();
-// })
-
 //获取用户个人信息接口
 usersApp.get('/userInfo', async (req, res) => {
-  let username = req.query.userId;
   console.log('获取用户个人信息token值有效');
-  let data = await queryProm(`select username,photo_url,sex,birthday from userInfo where username='${username}'`)
+  let username = req.query.userId;
+  let data = await queryProm(`select username,photo_url,sex,birthday from user where username='${username}'`)
   data = data[0]
   outputData = {
     personalInfo: data
@@ -117,10 +99,8 @@ usersApp.get('/userInfo', async (req, res) => {
 
 //修改用户个人信息接口
 usersApp.put('/userInfo', async (req, res) => {
-  let username = decode.username;
-  console.log('修改用户个人信息token值有效，用户名：', username);
   let data = req.body, personalInfo = data.personalInfo;
-  await queryProm(`update userInfo set username='${personalInfo.username}',sex='${personalInfo.sex}',birthday='${personalInfo.birthday}',photo_url='${personalInfo.photo_url}' where username='${data.id}'`)
+  await queryProm(`update user set username='${personalInfo.username}',sex='${personalInfo.sex}',birthday='${personalInfo.birthday}',photo_url='${personalInfo.photo_url}' where username='${data.id}'`)
   res.send({
     resultCode: 0,
     resultMsg: "success",

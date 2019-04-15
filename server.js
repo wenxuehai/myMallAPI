@@ -1,7 +1,6 @@
 const express = require('express')
 const productsRoute = require('./route/products/products')
 const userRoute = require('./route/user/user')
-const orderRoute = require('./route/order/order')
 
 const app = express();
 app.listen(8888);
@@ -24,5 +23,3 @@ app.all("*", function (req, res, next) {
 app.use('/products', productsRoute)
 //用户接口
 app.use('/users', userRoute)
-//order接口
-app.use('/orders',orderRoute)

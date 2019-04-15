@@ -10,13 +10,12 @@ var pool = mysql.createPool({
   password: "123456",
   database: "mymall_db"
 })
-
 //分类的接口
 productsApp.use('/category', categoryRoute)
 
-//精选好物、相关推荐接口
-productsApp.get('/', function (req, res) {
-  pool.query("select * from goodShop", function (err, data) {
+//精选好物接口
+productsApp.get('/goodItems', function (req, res) {
+  pool.query("select mainPic,name,itemId,sellPrice,shopId from allgoods where goodItems=1", function (err, data) {
     res.send({
       resultCode: 0,
       resultMsg: "success",
@@ -26,7 +25,7 @@ productsApp.get('/', function (req, res) {
 })
 //新品推荐接口
 productsApp.get('/latest', function (req, res) {
-  pool.query("select * from pullgoods", function (err, data) {
+  pool.query("select mainPic,name,itemId,sellPrice,shopId from allgoods where newItems=1", function (err, data) {
     res.send({
       resultCode: 0,
       resultMsg: "success",
@@ -34,6 +33,17 @@ productsApp.get('/latest', function (req, res) {
     }).end();
   })
 })
+//相关推荐接口
+productsApp.get('/recommendItems', function (req, res) {
+  pool.query("select mainPic,name,itemId,sellPrice,shopId from allgoods where recommendItems=1", function (err, data) {
+    res.send({
+      resultCode: 0,
+      resultMsg: "success",
+      list: data
+    }).end();
+  })
+})
+
 //关键字搜索接口
 productsApp.get('/keyword', function (req, res) {
   pool.query(`select mainPic,name,sellPrice,saleProps from allGoods where keyword like '%${req.query.itemName}%'`, function (err, data) {
@@ -46,6 +56,7 @@ productsApp.get('/keyword', function (req, res) {
     }).end()
   })
 })
+
 //商品列表展示接口
 productsApp.get('/catalog', function (req, res) {
   pool.query(`select * from allGoods where catalogId like '%${req.query.catalogId}%'`, function (err, data) {
@@ -58,6 +69,7 @@ productsApp.get('/catalog', function (req, res) {
     }).end()
   })
 })
+
 //商品详情接口
 productsApp.get('/goodDetails/:itemId', async (req, res) => {
   let shopId = req.query.shopId,

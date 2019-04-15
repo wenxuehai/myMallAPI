@@ -34,9 +34,22 @@ ordersApp.use(async function (req, res, next) {
 
 //获取订单数量的接口
 ordersApp.get('/', async (req, res) => {
-  let username = decode.username;
+  console.log('获取用户订单数量token值有效');
+  let userId = req.query.user_id;
+  let data = await queryProm(`select unPayOrder,unDeliveryOrder,unReceivedOrder from user where username='${userId}'`)
+  data = data[0]
+
+  res.send({
+    resultCode: 0,
+    resultMsg: "success",
+    data: data
+  }).end();
+})
+
+//获取购物车数据的接口
+ordersApp.get('/carts', async (req, res) => {
   console.log('获取用户订单数量token值有效，用户名：', username);
-  let data = await queryProm(`select unPayOrder,unDeliveryOrder,unReceivedOrder from ordersNum where username='${username}'`)
+  let data = await queryProm(`select unPayOrder,unDeliveryOrder,unReceivedOrder from user where username='${username}'`)
   data = data[0]
 
   res.send({
