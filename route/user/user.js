@@ -72,6 +72,24 @@ usersApp.post('/login', async (req, res) => {
   }).end();
 })
 
+//注册接口
+usersApp.post('/register', async (req, res) => {
+  let body = req.body;
+  let userArr = await queryProm(`select username from user where username='${body.username}'`);
+  if(userArr.length!=0){
+    res.send({
+      resultCode: 0,
+      resultMsg: "用户名已存在"
+    }).end();
+  }else{
+    await queryProm(`insert into user (username,password) values ('${body.username}','${body.password}')`)
+    res.send({
+      resultCode: 0,
+      resultMsg: "注册成功"
+    }).end();
+  }
+})
+
 //退出登录接口
 usersApp.post('/logout', async (req, res) => {
   res.send({

@@ -76,26 +76,22 @@ productsApp.get('/goodDetails/:itemId', async (req, res) => {
     itemId = req.params.itemId,
     outputData = {}
 
-  let parentArr = await queryProm(`select itemSkuDtos,itemEo,shopEo from goodsdetail where shopId=${shopId} and itemId=${itemId}`)
-  //这里是父级对象的数据
-  outputData = parentArr[0];
+  let parentArr = await queryProm(`select itemId as id,name from goodsdetail where shopId=${shopId} and itemId=${itemId}`)
+  //这里是父级对象itemEo的数据
+  outputData.itemEo = parentArr[0];
 
-  //这里是查询出来的父级对象的itemEo的数据
-  let itemEoData = await queryProm(`select id,name from itemEo where id=${outputData.itemEo}`);
-  outputData.itemEo = itemEoData[0];
   //这里是查询出来的父级对象的shopEo的数据
-  let shopEoData = await queryProm(`select deliveryType,deliveryTimeDesc,refundDesc,logo,name from shopEo where ID=${outputData.shopEo}`);
+  let shopEoData = await queryProm(`select deliveryType,deliveryTimeDesc,refundDesc,logo,name from shopDetail where shopId=${shopId}`);
   outputData.shopEo = shopEoData[0];
   //这里是父级对象的itemSkuDtos的数据
-  let itemSkuData = await queryProm(`select sellPrice,id,itemPropEos,mediaEos from itemSkuDtos where id=${outputData.itemSkuDtos}`);
-  for (const obj of itemSkuData) {
-    let str = obj.itemPropEos;
-    obj.itemPropEos = [{
-      propValue: str
-    }]
-    let mediaEosArr = await queryProm(`select fileUrl from mediaEos where shopId=${obj.mediaEos}`);
-    obj.mediaEos = mediaEosArr
-  }
+  let itemSkuData = await queryProm(`select sellPrice,itemId as id from itemSkuDtos where itemId=${itemId}`);
+  //这里是父级对象的itemSkuDtos里面的属性itemPropEos的数据
+  let itemPropEos = await queryProm(`select propValue from itemSkuDtos where itemId=${itemId}`)
+  itemSkuData[0].itemPropEos = itemPropEos
+  //这里是父级对象mediaEos里的数据
+  let mediaData = await queryProm(`select fileUrl from media where itemId=${itemId}`)
+  itemSkuData[0].mediaEos = mediaData
+
   outputData.itemSkuDtos = itemSkuData
 
   res.send({
