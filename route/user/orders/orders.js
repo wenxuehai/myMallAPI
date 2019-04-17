@@ -17,7 +17,7 @@ ordersApp.use(async function (req, res, next) {
       resultMsg: "success"
     }).end();
   } else {
-    let urlArr = ['/', '/carts', '/carts/item']
+    let urlArr = ['/', '/order', '/carts', '/carts/item']
     if (urlArr.indexOf(req.url) != -1) { //请求地址存在于上面的数组中，则需要验证token值
       decode = await Util.analyToken(req.get("auth"))
       if (!decode) {  //如果token过期
@@ -46,11 +46,55 @@ ordersApp.get('/', async (req, res) => {
   }).end();
 })
 
-//获取购物车数据的接口
+//提交订单的接口，此时的订单在数据库里的状态应该是未支付的，status为 1
+// 订单状态：1--待支付  4--待发货 41--待收货 5--已签收 6--已完成
+ordersApp.post('/order', async (req, res) => {
+  console.log('提交订单token值有效');
+  let body = req.body, order = req.body.order, itemList = req.body.itemList, address = req.body.address;
+
+  //将数据插入订单表格
+  await queryProm(`insert into orderList (userId,status,payAmount,totalAmount,id,totalItemNum) values (${body.userId},1,${order.payAmount},${order.totalAmount},${address.id},${itemList.length})`)
+  let insertArr = await queryProm(`SELECT @@IDENTITY as orderNo`);
+  let orderNo = insertArr[0].orderNo
+  console.log('新插入的订单的编号', orderNo);
+
+  for (const obj of itemList) {
+    //将订单详情插入订单详情表
+    await queryProm(`insert into orderDetail (orderNo,itemId,itemNum,proName) values (${orderNo},${obj.itemId},'${obj.itemNum}','${obj.propValue}')`)   
+  }
+
+  let outputData = await queryProm(`select orderNo,payAmount from orderList where orderNo=${orderNo}`)
+  outputData = outputData[0];
+  outputData.isPay = 0;
+
+  res.send({
+    resultCode: 0,
+    resultMsg: "success",
+    data: outputData
+  }).end();
+})
+
+//支付接口
+ordersApp.post('/order/pay', async (req, res) => {
+  let body = req.body;
+  await queryProm(`update orderList set status=4 where orderNo=${body.orderNo}`)
+  let outputData = {
+    payId: body.orderNo,
+    isPay:1
+  }
+
+  res.send({
+    resultCode: 0,
+    resultMsg: "success",
+    data: outputData
+  }).end();
+})
+
+//获取购物车详细数据的接口
 ordersApp.get('/carts', async (req, res) => {
   console.log('获取购物车数据token值有效');
   let userId = req.query.userId
-  let dataArr = await queryProm(`select ID,shopId,itemId from userCart where userId=${userId}`);
+  let dataArr = await queryProm(`select ID,shopId,itemId,propValue from userCart where userId=${userId}`);
   for (const obj of dataArr) {
     let nameArr = await queryProm(`select name from shopDetail where shopId=${obj.shopId}`);
     obj.shopName = nameArr[0].name;
@@ -58,16 +102,28 @@ ordersApp.get('/carts', async (req, res) => {
     let itemNum = await queryProm(`select itemNum from userCart where ID=${obj.ID}`);
     obj.shopItems = [{}];
     obj.shopItems[0].itemNum = itemNum[0].itemNum;
-    obj.shopItems[0].checked = true;
+    obj.shopItems[0].checked = false;
+    obj.shopItems[0].propValue = obj.propValue;
 
     let itemInfoArr = await queryProm(`select mainPic as imgUrl,sellPrice,name as itemName from allgoods where itemId=${obj.itemId}`);
-    Object.assign(obj.shopItems[0],itemInfoArr[0])
+    Object.assign(obj.shopItems[0], itemInfoArr[0])
   }
 
   res.send({
     resultCode: 0,
     resultMsg: "success",
     data: dataArr
+  }).end();
+})
+
+//获取购物车数量的接口
+ordersApp.get('/carts/num', async (req, res) => {
+  let userId = req.query.userId;
+  let arr = await queryProm(`select count(*) as num from userCart where userId=${userId}`)
+  res.send({
+    resultCode: 0,
+    resultMsg: "success",
+    data: arr[0].num
   }).end();
 })
 
