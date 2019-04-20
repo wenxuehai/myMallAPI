@@ -127,9 +127,14 @@ ordersApp.post('/order', async (req, res) => {
   }
   //将数据插入订单表格
   await queryProm(`insert into orderList (userId,status,payAmount,totalAmount,id,totalItemNum) values (${body.userId},1,${order.payAmount},${order.totalAmount},${address.id},${totalItemNum})`)
-  let insertArr = await queryProm(`SELECT @@IDENTITY as orderNo`);
+
+  // let insertArr = await queryProm(`select LAST_INSERT_ID()`);
+  // let orderNo = insertArr[0]["LAST_INSERT_ID()"]
+  // console.log('新插入的订单的编号', orderNo);
+
+  let insertArr = await queryProm(`select max(orderNo) as orderNo from orderList`)
   let orderNo = insertArr[0].orderNo
-  console.log('新插入的订单的编号', orderNo);
+  console.log('新插入的订单的编号：', orderNo);
 
   for (const obj of itemList) {
     //将订单详情插入订单详情表
@@ -139,6 +144,7 @@ ordersApp.post('/order', async (req, res) => {
   let outputData = await queryProm(`select orderNo,payAmount from orderList where orderNo=${orderNo}`)
   outputData = outputData[0];
   outputData.isPay = 0;
+  console.log('outputData:',outputData);
 
   res.send({
     resultCode: 0,

@@ -50,45 +50,55 @@ productsApp.get('/keyword', function (req, res) {
     res.send({
       resultCode: 0,
       resultMsg: "success",
-      pageNum: 1,
-      pages: 1,
       list: data
     }).end()
   })
 })
 
-//商品列表展示接口
+//分类商品列表展示接口
 productsApp.get('/catalog', function (req, res) {
   pool.query(`select * from allGoods where catalogId like '%${req.query.catalogId}%'`, function (err, data) {
     res.send({
       resultCode: 0,
       resultMsg: "success",
-      pageNum: 1,
-      pages: 1,
       list: data
     }).end()
   })
 })
 
+//判断商品是否存在
+productsApp.get('/hasThegood', async function (req, res) {
+  let itemId = req.query.itemId;
+  console.log('商品id：', itemId);
+  let data = await queryProm(`select name from allgoods where itemId='${itemId}'`);
+  res.send({
+    resultCode: 0,
+    resultMsg: "success",
+    data: data
+  }).end()
+})
+
 //商品详情接口
 productsApp.get('/goodDetails/:itemId', async (req, res) => {
-  let shopId = req.query.shopId,
-    itemId = req.params.itemId,
-    outputData = {}
+  let shopId = 0, itemId = req.params.itemId, outputData = {}
 
-  let parentArr = await queryProm(`select itemId as id,name from goodsdetail where shopId=${shopId} and itemId=${itemId}`)
+  let parentArr = await queryProm(`select itemId as id,name,shopId from allgoods where itemId=${itemId}`)
   //这里是父级对象itemEo的数据
   outputData.itemEo = parentArr[0];
+  shopId = parentArr[0].shopId
 
   //这里是查询出来的父级对象的shopEo的数据
   let shopEoData = await queryProm(`select deliveryType,deliveryTimeDesc,refundDesc,logo,name from shopDetail where shopId=${shopId}`);
   outputData.shopEo = shopEoData[0];
+
   //这里是父级对象的itemSkuDtos的数据
-  let itemSkuData = await queryProm(`select sellPrice,itemId as id from itemSkuDtos where itemId=${itemId}`);
-  //这里是父级对象的itemSkuDtos里面的属性itemPropEos的数据
-  let itemPropEos = await queryProm(`select propValue from itemSkuDtos where itemId=${itemId}`)
+  let itemSkuData = await queryProm(`select sellPrice,itemId as id from allgoods where itemId=${itemId} and shopId=${shopId}`);
+
+  //这里是父级对象的itemSkuDtos里的itemPropEos的数据
+  let itemPropEos = await queryProm(`select propValue from allgoods where itemId=${itemId} and shopId=${shopId}`);
   itemSkuData[0].itemPropEos = itemPropEos
-  //这里是父级对象mediaEos里的数据
+
+  //这里是父级对象itemSkuDtos里的mediaEos的数据
   let mediaData = await queryProm(`select fileUrl from media where itemId=${itemId}`)
   itemSkuData[0].mediaEos = mediaData
 
@@ -97,8 +107,6 @@ productsApp.get('/goodDetails/:itemId', async (req, res) => {
   res.send({
     resultCode: 0,
     resultMsg: "success",
-    pageNum: 1,
-    pages: 1,
     data: outputData
   }).end();
 })
