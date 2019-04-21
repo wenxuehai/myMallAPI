@@ -121,24 +121,24 @@ ordersApp.get('/orderList', async (req, res) => {
 ordersApp.post('/order', async (req, res) => {
   console.log('提交订单token值有效');
   let body = req.body, order = req.body.order, itemList = req.body.itemList, address = req.body.address;
-  let totalItemNum = 0
+  let totalItemNum = 0,fromCart = body.fromCart;
   for (const obj of itemList) {
     totalItemNum += obj.itemNum
   }
   //将数据插入订单表格
   await queryProm(`insert into orderList (userId,status,payAmount,totalAmount,id,totalItemNum) values (${body.userId},1,${order.payAmount},${order.totalAmount},${address.id},${totalItemNum})`)
 
-  // let insertArr = await queryProm(`select LAST_INSERT_ID()`);
-  // let orderNo = insertArr[0]["LAST_INSERT_ID()"]
-  // console.log('新插入的订单的编号', orderNo);
-
   let insertArr = await queryProm(`select max(orderNo) as orderNo from orderList`)
   let orderNo = insertArr[0].orderNo
   console.log('新插入的订单的编号：', orderNo);
 
   for (const obj of itemList) {
-    //将订单详情插入订单详情表
+    //将订单的商品详情插入订单详情表
     await queryProm(`insert into orderDetail (orderNo,itemId,itemNum,proName) values (${orderNo},${obj.itemId},'${obj.itemNum}','${obj.propValue}')`)
+    //如果提交订单来自购物车，那么将商品从用户购物车删除
+    if(fromCart){
+      await queryProm(`delete from usercart where userId=${body.userId} and itemId=${obj.itemId}`)
+    }
   }
 
   let outputData = await queryProm(`select orderNo,payAmount from orderList where orderNo=${orderNo}`)

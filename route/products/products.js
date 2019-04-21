@@ -46,7 +46,7 @@ productsApp.get('/recommendItems', function (req, res) {
 
 //关键字搜索接口
 productsApp.get('/keyword', function (req, res) {
-  pool.query(`select mainPic,name,sellPrice,saleProps from allGoods where keyword like '%${req.query.itemName}%'`, function (err, data) {
+  pool.query(`select mainPic,name,sellPrice,saleProps,itemId from allGoods where keyword like '%${req.query.itemName}%'`, function (err, data) {
     res.send({
       resultCode: 0,
       resultMsg: "success",

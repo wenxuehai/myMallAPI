@@ -72,8 +72,14 @@ cartsApp.get('/num', async (req, res) => {
 //加入购物车的接口
 cartsApp.post('/', async (req, res) => {
   console.log('加入购物车token值有效');
-  let data = req.body.cartList[0]
-  await queryProm(`insert into userCart (userId,itemId,shopId,propValue,itemNum) values (${data.userId},${data.itemId},${data.skuId},'${data.propValue}',${data.itemNum})`)
+  let data = req.body.cartList[0];
+  let itemArr = await queryProm(`select itemId,itemNum from usercart where userId=${data.userId} and itemId=${data.itemId}`)
+  if(itemArr.length > 0){  //如果商品已存在于购物车当中，那么更新数量
+    await queryProm(`update usercart set itemNum=${data.itemNum + itemArr[0].itemNum} where userId=${data.userId} and itemId=${data.itemId}`)
+  }else{  //否则插入新数据
+    await queryProm(`insert into userCart (userId,itemId,shopId,propValue,itemNum) values (${data.userId},${data.itemId},${data.skuId},'${data.propValue}',${data.itemNum})`)
+  }
+  
   res.send({
     resultCode: 0,
     resultMsg: "success"
