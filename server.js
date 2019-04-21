@@ -1,9 +1,14 @@
 const express = require('express')
 const productsRoute = require('./route/products/products')
 const userRoute = require('./route/user/user')
+const multer = require('multer');
+const multerObj = multer({ dest: './static/upload' });
+const static = require('express-static');
+
 
 const app = express();
 app.listen(8888);
+app.use(multerObj.any());
 
 app.all("*", function (req, res, next) {
   //设置允许跨域的域名，*代表允许任意域名跨域
@@ -23,3 +28,6 @@ app.all("*", function (req, res, next) {
 app.use('/products', productsRoute)
 //用户接口
 app.use('/users', userRoute)
+
+//5.default：static
+app.use(static('./static/upload'));

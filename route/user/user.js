@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const Util = require('../../util/util')
 const ordersRoute = require('./orders/orders')
 const addressRoute = require('./address/address')
+const fs = require('fs');
 
 usersApp.use(bodyParser.urlencoded({ extended: false }))
 usersApp.use(bodyParser.json())
@@ -19,7 +20,7 @@ usersApp.use(async function (req, res, next) {
       resultMsg: "success"
     }).end();
   } else {
-    let urlArr = ['/userInfo','/address']
+    let urlArr = ['/userInfo', '/address']
     if (urlArr.indexOf(req.url) != -1) { //请求地址存在于上面的数组中，则需要验证token值
       decode = await Util.analyToken(req.get("auth"))
       if (!decode) {  //如果token过期
@@ -76,12 +77,12 @@ usersApp.post('/login', async (req, res) => {
 usersApp.post('/register', async (req, res) => {
   let body = req.body;
   let userArr = await queryProm(`select username from user where username='${body.username}'`);
-  if(userArr.length!=0){
+  if (userArr.length != 0) {
     res.send({
       resultCode: 0,
       resultMsg: "用户名已存在"
     }).end();
-  }else{
+  } else {
     await queryProm(`insert into user (username,password) values ('${body.username}','${body.password}')`)
     res.send({
       resultCode: 0,
@@ -95,7 +96,7 @@ usersApp.post('/logout', async (req, res) => {
   res.send({
     resultCode: 0,
     resultMsg: "success",
-    data: {ok: true}
+    data: { ok: true }
   }).end();
 })
 
@@ -124,6 +125,32 @@ usersApp.put('/userInfo', async (req, res) => {
     resultMsg: "success",
     data: { msg: '修改成功' }
   }).end();
+})
+
+//上传用户头像接口
+usersApp.post('/userInfo/:userId/img', async (req, res) => {
+  let file = req.files[0];
+  console.log(file);
+
+  let ext = file.originalname.split('.')[1] //文件扩展名
+  let newPath = file.path + '.' + ext, oldPath = file.path;
+  fs.rename(oldPath,newPath,async (err) => {
+    if (err) {
+      res.send({
+        resultCode: 0,
+        resultMsg: "success",
+        data: { msg: '上传失败' }
+      }).end();
+    }else {
+      let newUrl = 'http://192.168.199.223:8888/' + file.filename  + '.' + ext;
+      await queryProm(`update user set photo_url='${newUrl}' where username='${req.params.userId}'`)
+      res.send({
+        resultCode: 0,
+        resultMsg: "success",
+        data: { url: newUrl }
+      }).end();
+    }
+  })
 })
 
 module.exports = usersApp;
