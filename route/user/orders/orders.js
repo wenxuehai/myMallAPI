@@ -144,8 +144,36 @@ ordersApp.post('/order', async (req, res) => {
   let outputData = await queryProm(`select orderNo,payAmount from orderList where orderNo=${orderNo}`)
   outputData = outputData[0];
   outputData.isPay = 0;
-  console.log('outputData:',outputData);
 
+  res.send({
+    resultCode: 0,
+    resultMsg: "success",
+    data: outputData
+  }).end();
+})
+
+//查询订单详细信息接口
+ordersApp.get('/order', async (req, res) => {
+  let query = req.query, outputData = {}, deliveryData = {}, itemListData = [], orderEoData = {};
+  //父级对象的delivery数据
+  let deliveryArr = await queryProm(`select phone as deliveryMobile,contact as deliveryName,region,detailAddr from address where userId=${query.userId} and id=${query.id}`)
+  deliveryData = deliveryArr[0]
+  outputData.delivery = deliveryData
+  
+  //父级对象的itemList数据
+  let itemListArr = await queryProm(`select itemId,itemNum,proName from orderdetail where orderNo=${query.orderNo}`)
+  for (const obj of itemListArr) {
+    let otherDataArr = await queryProm(`select mainPic,name as itemName,sellPrice as itemPrice from allgoods where itemId=${obj.itemId}`)
+    Object.assign(obj,otherDataArr[0])
+  }
+  outputData.itemList = itemListArr
+
+  //父级对象的orderEo数据
+  let orderEoArr = await queryProm(`select orderNo,status,payAmount as itemAmount from orderlist where userId=${query.userId} and orderNo=${query.orderNo}`)
+  outputData.orderEo = orderEoArr[0]
+
+  console.log(outputData);
+  // return;
   res.send({
     resultCode: 0,
     resultMsg: "success",
