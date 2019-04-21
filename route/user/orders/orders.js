@@ -21,7 +21,7 @@ ordersApp.use(async function (req, res, next) {
       resultMsg: "success"
     }).end();
   } else {
-    let urlArr = ['/', '/order']
+    let urlArr = ['/', '/order', '/order/cancel','/order/receive']
     if (urlArr.indexOf(req.url) != -1) { //请求地址存在于上面的数组中，则需要验证token值
       decode = await Util.analyToken(req.get("auth"))
       if (!decode) {  //如果token过期
@@ -150,6 +150,29 @@ ordersApp.post('/order', async (req, res) => {
     resultCode: 0,
     resultMsg: "success",
     data: outputData
+  }).end();
+})
+
+//取消订单接口
+ordersApp.put('/order/cancel', async (req, res) => {
+  console.log('取消订单的token有效');
+  let body = req.body;
+  await queryProm(`delete from orderlist where userId=${body.userId} and orderNo=${body.orderNo}`)
+  await queryProm(`delete from orderdetail where orderNo=${body.orderNo}`)
+  res.send({
+    resultCode: 0,
+    resultMsg: "success"
+  }).end();
+})
+
+//确认收货接口，将该订单状态改为已完成 -- 6
+ordersApp.put('/order/receive', async (req, res) => {
+  console.log('确认收货token有效');
+  let body = req.body;
+  await queryProm(`update orderlist set status=6 where userId=${body.userId} and orderNo=${body.orderNo}`)
+  res.send({
+    resultCode: 0,
+    resultMsg: "success"
   }).end();
 })
 
