@@ -86,4 +86,20 @@ cartsApp.post('/', async (req, res) => {
   }).end();
 })
 
+//删除购物车商品的接口
+cartsApp.delete('/item', async (req, res) => {
+  console.log('删除购物车商品的token有效');
+  let deleteIdList = req.body["deleteIdList[]"],userId = req.body.userId
+  for (const id of deleteIdList) {
+    await queryProm(`delete from usercart where itemId=${id} and userId=${userId}`)
+  }
+
+  res.send({
+    resultCode: 0,
+    resultMsg: "success",
+    data: {}
+  }).end();
+})
+
+
 module.exports = cartsApp;
