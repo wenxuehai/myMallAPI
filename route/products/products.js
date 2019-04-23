@@ -56,14 +56,24 @@ productsApp.get('/keyword', function (req, res) {
 })
 
 //分类商品列表展示接口
-productsApp.get('/catalog', function (req, res) {
-  pool.query(`select * from allGoods where catalogId like '%${req.query.catalogId}%'`, function (err, data) {
-    res.send({
-      resultCode: 0,
-      resultMsg: "success",
-      list: data
-    }).end()
-  })
+productsApp.get('/catalog',async function (req, res) {
+  let query = req.query,data = null;
+  switch(query.type){
+    case '3':
+      data = await queryProm(`select * from allGoods where catalogId like '%${req.query.catalogId}%' order by sellPrice desc`);
+      break;
+    case '4':
+      data = await queryProm(`select * from allGoods where catalogId like '%${req.query.catalogId}%' order by sellPrice`);
+      break;
+    default:
+      data = await queryProm(`select * from allGoods where catalogId like '%${req.query.catalogId}%'`)
+  }
+  // let data = await queryProm(`select * from allGoods where catalogId like '%${req.query.catalogId}%'`)
+  res.send({
+    resultCode: 0,
+    resultMsg: "success",
+    list: data
+  }).end()
 })
 
 //判断商品是否存在
