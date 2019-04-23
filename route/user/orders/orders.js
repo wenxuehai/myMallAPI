@@ -141,7 +141,7 @@ ordersApp.post('/order', async (req, res) => {
     }
   }
 
-  let outputData = await queryProm(`select orderNo,payAmount from orderList where orderNo=${orderNo}`)
+  let outputData = await queryProm(`select orderNo,payAmount,id from orderList where orderNo=${orderNo}`)
   outputData = outputData[0];
   outputData.isPay = 0;
 
