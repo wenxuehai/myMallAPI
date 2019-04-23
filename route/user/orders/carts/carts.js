@@ -17,8 +17,12 @@ cartsApp.use(async function (req, res, next) {
       resultMsg: "success"
     }).end();
   } else {
-    let urlArr = ['/',  '/item']
-    if (urlArr.indexOf(req.url) != -1) { //请求地址存在于上面的数组中，则需要验证token值
+    let urlArr = ['/',  '/item','/num']
+    let url = req.url;
+    if (url.indexOf('?') != -1) {
+      url = url.replace(/\?.*/g, '')
+    }
+    if (urlArr.indexOf(url) != -1) { //请求地址存在于上面的数组中，则需要验证token值
       decode = await Util.analyToken(req.get("auth"))
       if (!decode) {  //如果token过期
         console.log('已过期或者无效的token');

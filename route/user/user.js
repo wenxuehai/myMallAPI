@@ -20,8 +20,12 @@ usersApp.use(async function (req, res, next) {
       resultMsg: "success"
     }).end();
   } else {
+    let url = req.url;
+    if(url.indexOf('?') !=-1){  //如果是get请求的话，url后面有参数，需将参数去掉
+      url = url.replace(/\?.*/g,'')
+    }
     let urlArr = ['/userInfo', '/address']
-    if (urlArr.indexOf(req.url) != -1) { //请求地址存在于上面的数组中，则需要验证token值
+    if (urlArr.indexOf(url) != -1) { //请求地址存在于上面的数组中，则需要验证token值
       decode = await Util.analyToken(req.get("auth"))
       if (!decode) {  //如果token过期
         console.log('已过期或者无效的token');
@@ -58,7 +62,7 @@ usersApp.post('/login', async (req, res) => {
       resultMsg: '密码错误'
     }
   } else {
-    let token = Util.setToken({ username: req.body.username }, 10 * 60 * 60);
+    let token = Util.setToken({ username: req.body.username }, 10*60*60); //秒为单位
     outputData = {
       code: '1',// -1 表示登录失败，其他的表示成功
       resultMsg: '登录成功',
