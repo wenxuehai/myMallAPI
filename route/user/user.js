@@ -134,7 +134,6 @@ usersApp.put('/userInfo', async (req, res) => {
 //上传用户头像接口
 usersApp.post('/userInfo/:userId/img', async (req, res) => {
   let file = req.files[0];
-  console.log(file);
 
   let ext = file.originalname.split('.')[1] //文件扩展名
   let newPath = file.path + '.' + ext, oldPath = file.path;
@@ -146,7 +145,10 @@ usersApp.post('/userInfo/:userId/img', async (req, res) => {
         data: { msg: '上传失败' }
       }).end();
     }else {
+      //宿舍WiFi  切换以后必须也得重新上传图片，图片地址才修改
       let newUrl = 'http://192.168.199.223:8888/' + file.filename  + '.' + ext;
+      //手机热点
+      // let newUrl = 'http://192.168.43.20:8888/' + file.filename + '.' + ext;
       await queryProm(`update user set photo_url='${newUrl}' where username='${req.params.userId}'`)
       res.send({
         resultCode: 0,

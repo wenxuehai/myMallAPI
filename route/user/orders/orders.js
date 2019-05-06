@@ -176,7 +176,6 @@ ordersApp.get('/order', async (req, res) => {
   let orderEoArr = await queryProm(`select orderNo,status,payAmount as itemAmount from orderlist where userId=${query.userId} and orderNo=${query.orderNo}`)
   outputData.orderEo = orderEoArr[0]
 
-  console.log(outputData);
   // return;
   res.send({
     resultCode: 0,
