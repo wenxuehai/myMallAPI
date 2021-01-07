@@ -80,7 +80,7 @@ productsApp.get('/catalog',async function (req, res) {
 productsApp.get('/hasThegood', async function (req, res) {
   let itemId = req.query.itemId;
   console.log('商品id：', itemId);
-  let data = await queryProm(`select name from allgoods where itemId='${itemId}'`);
+  let data = await queryProm(`select name,shopId from allgoods where itemId='${itemId}'`);
   res.send({
     resultCode: 0,
     resultMsg: "success",
@@ -102,7 +102,7 @@ productsApp.get('/goodDetails/:itemId', async (req, res) => {
   outputData.shopEo = shopEoData[0];
 
   //这里是父级对象的itemSkuDtos的数据
-  let itemSkuData = await queryProm(`select sellPrice,itemId as id from allgoods where itemId=${itemId} and shopId=${shopId}`);
+  let itemSkuData = await queryProm(`select sellPrice,shopId as id from allgoods where itemId=${itemId} and shopId=${shopId}`);
 
   //这里是父级对象的itemSkuDtos里的itemPropEos的数据
   let itemPropEos = await queryProm(`select propValue from allgoods where itemId=${itemId} and shopId=${shopId}`);

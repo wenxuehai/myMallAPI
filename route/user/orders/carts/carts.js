@@ -81,6 +81,7 @@ cartsApp.post('/', async (req, res) => {
   if(itemArr.length > 0){  //如果商品已存在于购物车当中，那么更新数量
     await queryProm(`update usercart set itemNum=${data.itemNum + itemArr[0].itemNum} where userId=${data.userId} and itemId=${data.itemId}`)
   }else{  //否则插入新数据
+    console.log(data.skuId,data.shopId,data.itemId);
     await queryProm(`insert into userCart (userId,itemId,shopId,propValue,itemNum) values (${data.userId},${data.itemId},${data.skuId},'${data.propValue}',${data.itemNum})`)
   }
   
